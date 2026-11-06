@@ -19,6 +19,7 @@ An end-to-end R and SQLite data engineering, econometric modeling, spatial clust
   - [Phase 4: Inferential Statistics & Negative Binomial Regression](#phase-4-inferential-statistics--negative-binomial-regression)
   - [Phase 5: Spatial Autocorrelation & Station Typology](#phase-5-spatial-autocorrelation--station-typology)
   - [Phase 6: Time-Series Decomposition & Forecasting](#phase-6-time-series-decomposition--forecasting)
+  - [Phase 7: Ten-Model Machine Learning Benchmark & 2-Hour Rebalancing Forecasting](#phase-7-ten-model-machine-learning-benchmark--2-hour-rebalancing-forecasting)
 
 ---
 
@@ -52,9 +53,11 @@ citibike-rebalancing/
 ├── README.md                       # Comprehensive system documentation and run guide
 ├── data/
 │   ├── .gitkeep
-│   ├── citibike.sqlite             # Central SQLite database (8 tables; ignored by git)
+│   ├── citibike.sqlite             # Central SQLite database (9 tables; ignored by git)
 │   ├── processed/                  # Heavy cached RDS artifacts (ignored by git)
+│   │   ├── best_model.rds          # Fitted finalized Random Forest rebalancing workflow
 │   │   ├── panel.rds               # Station x 2-hour balanced panel with clusters (797,040 rows)
+│   │   ├── test_predictions.rds    # Full 9-day out-of-sample predictions (239,112 rows)
 │   │   └── trips_clean.rds         # Cleaned trip records (4,708,761 rows)
 │   └── raw/                        # Ingested raw datasets (ignored by git)
 │       ├── trips/                  # 5 official NYC September 2024 trip partition files
@@ -67,18 +70,26 @@ citibike-rebalancing/
 │   ├── figures/                    # High-resolution figures (PNG, 200 dpi)
 │   │   ├── acf_hourly_trips.png                      # 72-hour Autocorrelation Function (ACF)
 │   │   ├── bottleneck_heatmap_top25.png              # Top 25 stations x 24-hour departure matrix
+│   │   ├── confusion_matrices_all_models.png         # Faceted confusion matrix heatmaps across 10 ML models
 │   │   ├── correlation_heatmap_hourly_weather.png    # Spearman rank correlation matrix
 │   │   ├── dbscan_knndist_elbow.png                  # 5-NN distance elbow plot (eps = 400m)
 │   │   ├── distance_duration_gam.png                 # Distance vs. duration with GAM smooth (30k sample)
 │   │   ├── duration_member_casual_boxplot.png        # Duration boxplot by rider type on log scale
+│   │   ├── feature_importance_rf_xgb.png             # Native engine feature importance (RF Impurity vs XGB Gain)
+│   │   ├── feature_selection.png                     # Multi-criteria feature selection consensus bar chart
 │   │   ├── heatmap_dow_hour.png                      # Day of week x hour citywide trip density
 │   │   ├── hourly_departure_ridges.png               # Ridge density of departures (weekday vs. weekend)
 │   │   ├── irr_forest_plot.png                       # Incidence Rate Ratios (IRR) forest plot (95% CI)
 │   │   ├── kmeans_personality_elbow_silhouette.png   # K-means silhouette by k (k = 2 to 6)
+│   │   ├── model_comparison_roc_auc.png              # Macro ROC-AUC benchmark across 10 models + baseline
 │   │   ├── moran_scatterplot.png                     # Standardized Moran scatterplot (I = 0.278)
 │   │   ├── pca_scree_plot.png                        # PCA scree plot of 24h departure shares
+│   │   ├── pr_curves_by_class.png                    # One-vs-rest Precision-Recall curves (Drainer & Collector)
 │   │   ├── regression_asymmetry_diagnostics.png      # Residuals vs. Fitted & Normal Q-Q plots
-│   │   └── stl_decomposition.png                     # 4-panel STL decomposition (Observed/Trend/Season/Remainder)
+│   │   ├── roc_curves_by_class.png                   # One-vs-rest ROC curves (Drainer & Collector)
+│   │   ├── stl_decomposition.png                     # 4-panel STL decomposition (Observed/Trend/Season/Remainder)
+│   │   ├── training_time_vs_roc_auc.png              # Pareto frontier scatter of training time vs. Macro ROC-AUC
+│   │   └── tuning_results.png                        # Validation ROC-AUC across Latin Hypercube grid candidates
 │   ├── maps/                       # Standalone self-contained HTML widgets
 │   │   ├── dbscan_clusters.html                      # Interactive Leaflet map of 18 DBSCAN corridors
 │   │   ├── hourly_demand_weather.html                # Interactive Plotly dual-axis demand & weather chart
@@ -89,16 +100,23 @@ citibike-rebalancing/
 │   │   ├── station_personalities.html                # Leaflet map colored by station personality cluster
 │   │   └── ts_forecast_comparison.html               # Interactive Plotly 7-day out-of-sample forecast comparison
 │   └── tables/                     # CSV audit logs and summary metrics
+│       ├── best_params.csv                     # Optimal tuned hyperparameters for top 2 models
 │       ├── cleaning_audit.csv                  # Sequential attrition audit across cleaning stages
 │       ├── cluster_silhouette_comparison.csv   # DBSCAN vs. K-means average silhouette width
 │       ├── eda_summary.csv                     # Distribution metrics (mean, median, sd, min, max, skewness)
+│       ├── feature_selection.csv               # Multi-criteria screening results (NZV/Corr, LASSO, RF Impurity)
 │       ├── missingness_raw.csv                 # Raw column-level missing value breakdown
+│       ├── ml_interpretation.md                # Comprehensive plain-English machine learning benchmark report
+│       ├── model_ci.csv                        # 95% Bootstrap confidence intervals for top 2 models
+│       ├── model_comparison.csv                # 10-model test benchmark metrics sorted by Macro ROC-AUC
 │       ├── station_asymmetry_regression.csv    # OLS coefficients for transit/capacity asymmetry model
 │       ├── station_features.csv                # Initial station flow metrics and subway proximity
 │       ├── station_features_final.csv          # Enriched station features with DBSCAN and personality
 │       ├── stats_interpretation.md             # Comprehensive plain-English statistical report
 │       ├── stats_summary.csv                   # Formatted summary of non-parametric hypothesis tests
 │       ├── ts_accuracy.csv                     # Time-series hold-out forecast accuracy (RMSE, MAE, MAPE)
+│       ├── tuning_before_after.csv             # Performance comparison before and after hyperparameter tuning
+│       ├── tuning_results.csv                  # Full validation results across 8 hyperparameter configurations
 │       └── weather_nb_irr.csv                  # Negative Binomial regression coefficients & IRRs
 └── R/
     ├── 00_setup.R                  # Dependency checks, CRAN binary verification, directory init
@@ -109,6 +127,7 @@ citibike-rebalancing/
     ├── 05_statistics.R             # Inferential hypothesis tests, Spearman heatmap, Negative Binomial GLM
     ├── 06_spatial_clusters.R       # Moran's I, Local Moran LISA, DBSCAN, PCA station personalities
     ├── 07_time_series.R            # STL decomposition, 7-day holdout forecasting benchmark (snaive, stlf, ARIMA)
+    ├── 08_ml_comparison.R          # 10-model ML benchmark, tuning, chunked test scoring, evaluation plots
     └── utils.R                     # Vectorized Haversine distance, Tukey IQR filter, skewness
 ```
 
@@ -172,6 +191,7 @@ The SQLite database at `data/citibike.sqlite` manages 8 relational tables:
 | `station_features` | 2,266 | `station_id` | Flows, asymmetry, capacity, subway proximity, `dbscan_cluster`, and `personality`. |
 | `panel` | 797,040 | `station_id`, `window_start` | Balanced 2-hour panel (2,214 stations $\times$ 360 bins) with deltas, pressure, lags, weather, and clusters. |
 | `hourly_demand` | 720 | `hour_start` | Citywide hourly demand split by member vs. casual riders, merged with contemporaneous weather. |
+| `test_predictions` | 239,112 | `station_id`, `bin_start` | Out-of-sample predicted class, probabilities, delta, coordinates, and station metadata from best tuned model. |
 
 ---
 
@@ -221,3 +241,42 @@ The SQLite database at `data/citibike.sqlite` manages 8 relational tables:
   2. **Seasonal Naïve (`snaive`)**: Competitive baseline — $\text{RMSE} = 2,725.58$, $\text{MAE} = 1,710.23$, $\text{MAPE} = 50.88\%$.
   3. **Dynamic Harmonic ARIMA (Fourier $K = 4$)**: $\text{RMSE} = 2,958.44$, $\text{MAE} = 2,010.45$, $\text{MAPE} = 68.68\%$.
 - **Model Commentary**: `stlf` outperforms because Loess seasonal extraction isolates rigid diurnal transit routines while exponential smoothing flexibly adapts to baseline monthly trends.
+
+### Phase 7: Ten-Model Machine Learning Benchmark & 2-Hour Rebalancing Forecasting
+- **Rebalancing Target Engineering**:
+  - `Drainer` ($\Delta \le -5$): Station net inventory depletion requiring mobile rebalancing supply vans.
+  - `Collector` ($\Delta \ge 5$): Station dock blockage risk requiring outbound corral van clearance.
+  - `Balanced` ($-5 < \Delta < 5$): Self-regulating inventory equilibrium.
+- **Strict Leakage Prevention**:
+  - Station $\times$ hour historical mean delta and standard deviation computed strictly on the training period (2024-09-01 to 2024-09-21) and mapped forward.
+  - Test period (2024-09-22 to 2024-09-30) evaluated purely with information available prior to window $t$, plus calendar and forecasted weather. Window $t$ arrivals, departures, delta, and pressure strictly excluded.
+- **Class Imbalance & Recipe Architecture**:
+  - Training pool (150,000 rows) balanced with `themis::step_downsample(under_ratio = 2)` during model prep; test set (40,000 benchmark sample) left in its natural class proportion (~84.8% Balanced, ~7.6% Drainer, ~7.6% Collector).
+  - Multi-criteria feature selection consensus (NZV/Correlation, Multinomial LASSO at $\lambda_{1\text{se}}$, and Random Forest Gini impurity) filtered near-zero-variance cluster dummies while preserving spatial subway proximity and historical rolling lags.
+- **10-Model Benchmark Comparison (Sorted by Macro ROC-AUC)**:
+  1. **Random Forest (Ranger)**: $\text{Macro ROC-AUC} = \mathbf{0.8988}$, $\text{Bal Acc} = 0.7939$, $\text{Macro F1} = 0.5946$ (Time: 29.8s).
+  2. **XGBoost (Extreme Gradient Boosting)**: $\text{Macro ROC-AUC} = 0.8890$, $\text{Bal Acc} = 0.7851$, $\text{Macro F1} = 0.5809$ (Time: 17.3s).
+  3. **Neural Network (MLP)**: $\text{Macro ROC-AUC} = 0.8871$, $\text{Bal Acc} = 0.7820$, $\text{Macro F1} = 0.5760$ (Time: 87.6s).
+  4. **Bagged Trees**: $\text{Macro ROC-AUC} = 0.8818$, $\text{Bal Acc} = 0.7830$, $\text{Macro F1} = 0.5740$ (Time: 161.1s).
+  5. **Multinomial Logistic Regression (glmnet)**: $\text{Macro ROC-AUC} = 0.8790$, $\text{Bal Acc} = 0.7410$, $\text{Macro F1} = 0.6050$ (Time: 16.9s).
+  6. **LDA (MASS)**: $\text{Macro ROC-AUC} = 0.8644$, $\text{Bal Acc} = 0.7050$, $\text{Macro F1} = 0.5890$ (Time: 12.7s).
+  7. **KNN ($k=15$)**: $\text{Macro ROC-AUC} = 0.8275$, $\text{Bal Acc} = 0.7230$, $\text{Macro F1} = 0.5360$ (Time: 71.1s).
+  8. **Decision Tree (CART)**: $\text{Macro ROC-AUC} = 0.8172$, $\text{Bal Acc} = 0.7880$, $\text{Macro F1} = 0.5300$ (Time: 16.3s).
+  9. **Naive Bayes**: $\text{Macro ROC-AUC} = 0.7855$, $\text{Bal Acc} = 0.5570$, $\text{Macro F1} = 0.1770$ (Time: 12.7s).
+  10. **Baseline (Null Model)**: $\text{Macro ROC-AUC} = 0.5000$, $\text{Bal Acc} = 0.5000$, $\text{Drainer/Collector Recall} = 0.0000$ (Deceptive raw accuracy: 85.8%).
+  11. *SVM RBF (kernlab)*: Optimization line search failure during multiclass Platt scaling sigmoid calibration; recorded as Failed per fault-tolerant design.
+- **Hyperparameter Tuning (Rolling Chronological Resamples)**:
+  - 8-candidate Latin Hypercube grids evaluated over 2 rolling chronological splits (Split 1: Days 1-7 $\to$ 8-14; Split 2: Days 1-14 $\to$ 15-21).
+  - **Random Forest**: Tuned $mtry = 10, min\_n = 9$ yielded $\text{Macro ROC-AUC} = 0.8970$.
+  - **XGBoost**: Tuned $tree\_depth = 6, learn\_rate = 0.0361, trees = 271, min\_n = 2$ improved $\text{Macro ROC-AUC}$ from $0.8890 \to \mathbf{0.8955}$ (+0.73%) and Balanced Accuracy to $0.7940$ (+1.13%).
+- **Statistical Validation (100 Bootstrap Resamples)**:
+  - Random Forest 95% CI: $[0.8932, 0.9006]$ (Mean = $0.8972$).
+  - XGBoost 95% CI: $[0.8915, 0.8992]$ (Mean = $0.8956$).
+  - Overlap: **TRUE** (Both tree ensemble architectures perform comparably within sampling variance).
+- **Full 9-Day Out-of-Sample Test Scoring (239,112 windows)**:
+  - Best Tuned Model (**Random Forest**) scored on all 2,214 stations across 108 2-hour windows (September 22 to 30) chunked in 50,000-row batches:
+    - **Macro ROC-AUC**: **0.9005**
+    - **Balanced Accuracy**: **0.7977**
+    - **Raw Accuracy**: **0.7840**
+    - **Macro F1-Score**: **0.5943**
+  - Stored permanently in SQLite table `test_predictions` and `data/processed/test_predictions.rds`.

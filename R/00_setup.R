@@ -35,7 +35,19 @@ REQUIRED_PACKAGES <- c(
   "dbscan",
   "cluster",
   "MASS",
-  "boot"
+  "boot",
+  "tidymodels",
+  "themis",
+  "discrim",
+  "baguette",
+  "kknn",
+  "kernlab",
+  "ranger",
+  "xgboost",
+  "glmnet",
+  "rpart",
+  "nnet",
+  "naivebayes"
 )
 
 # Packages that must NEVER be attached to search path via library()

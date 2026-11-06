@@ -1,0 +1,7 @@
+parameter,best_value,model
+mtry,10,Random Forest
+min_n,9,Random Forest
+trees,271,XGBoost
+min_n,2,XGBoost
+tree_depth,6,XGBoost
+learn_rate,0.0360697271532629,XGBoost
