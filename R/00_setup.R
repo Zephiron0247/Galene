@@ -6,6 +6,11 @@
 # Environment: R 4.6.1 on Windows (CRAN binary packages only, no Rtools).
 # ==============================================================================
 
+# Ensure Pandoc path is discoverable for self-contained HTML widget generation
+if (dir.exists("D:/R/pandoc-3.6.3")) {
+  Sys.setenv(RSTUDIO_PANDOC = "D:/R/pandoc-3.6.3")
+}
+
 # List of required packages for the citibike-rebalancing project
 REQUIRED_PACKAGES <- c(
   "dplyr",
@@ -18,7 +23,13 @@ REQUIRED_PACKAGES <- c(
   "httr",
   "jsonlite",
   "data.table",
-  "sf"
+  "sf",
+  "leaflet",
+  "leaflet.extras",
+  "ggridges",
+  "plotly",
+  "htmlwidgets",
+  "scales"
 )
 
 # Packages that must NEVER be attached to search path via library()
@@ -29,9 +40,13 @@ PROJECT_DIRECTORIES <- c(
   "data",
   "data/raw",
   "data/raw/trips",
+  "data/processed",
   "R",
   "docs",
   "results",
+  "results/tables",
+  "results/figures",
+  "results/maps",
   "presentation"
 )
 

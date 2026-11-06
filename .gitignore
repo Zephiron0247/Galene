@@ -11,6 +11,8 @@
 *.sqlite3
 *.db
 
-# Raw data directory
+# Data directories (raw and processed cache)
 data/raw/
 data/raw
+data/processed/
+data/processed

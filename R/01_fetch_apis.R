@@ -5,7 +5,7 @@
 #          1. Citi Bike GBFS station information
 #          2. Open-Meteo historical weather data (September 2024)
 #          3. MTA Subway Entrances and Exits dataset
-#          4. Sample September 2024 Citi Bike trip data
+#          (Note: Trip CSVs reside in data/raw/trips/ from official NY monthly exports)
 # Environment: R 4.6.1 on Windows (CRAN binary packages only, no Rtools).
 # ==============================================================================
 
@@ -167,50 +167,9 @@ download_subway_entrances <- function(url = "https://data.ny.gov/api/views/i9wp-
   return(dest_file)
 }
 
-#' Fetch sample Citi Bike trip data (September 2024)
+#' Runner function to execute API data fetchers
 #'
-#' Downloads and unzips a representative September 2024 Citi Bike trip dataset
-#' into `data/raw/trips/` if no trip CSVs are currently present. This guarantees
-#' that downstream database building and queries have operational data to process.
-#'
-#' @param url Download URL for trip zip archive (default: September 2024 Jersey City data).
-#' @param dest_dir Destination directory for extracted trip CSVs.
-#' @return Character vector of trip CSV file paths.
-fetch_sample_trips <- function(url = "https://s3.amazonaws.com/tripdata/JC-202409-citibike-tripdata.csv.zip",
-                               dest_dir = "data/raw/trips") {
-  # Step 1: Check if trip files already exist
-  existing_csvs <- list.files(dest_dir, pattern = "\\.csv$", full.names = TRUE)
-  if (length(existing_csvs) > 0) {
-    message(sprintf("Found %d existing trip CSV(s) in '%s'. Skipping sample download.",
-                    length(existing_csvs), dest_dir))
-    return(existing_csvs)
-  }
-
-  message("Downloading sample Citi Bike trips dataset for September 2024...")
-  dir.create(dest_dir, recursive = TRUE, showWarnings = FALSE)
-
-  # Step 2: Download zip archive to a temporary file
-  temp_zip <- tempfile(fileext = ".zip")
-  utils::download.file(url, temp_zip, mode = "wb", quiet = TRUE)
-
-  # Step 3: Extract CSV files into destination directory (excluding macOS artifacts)
-  zip_contents <- utils::unzip(temp_zip, list = TRUE)$Name
-  csv_to_extract <- zip_contents[grepl("\\.csv$", zip_contents) & !grepl("__MACOSX", zip_contents)]
-
-  utils::unzip(temp_zip, files = csv_to_extract, exdir = dest_dir)
-  unlink(temp_zip)
-
-  extracted_files <- list.files(dest_dir, pattern = "\\.csv$", full.names = TRUE)
-  message(sprintf("Extracted %d trip file(s) into '%s'.",
-                  length(extracted_files), dest_dir))
-
-  return(extracted_files)
-}
-
-#' Runner function to execute all API data fetchers
-#'
-#' Coordinates fetching station information, weather records, subway entrances,
-#' and sample trip files, logging comprehensive progress information.
+#' Coordinates fetching station information, weather records, and subway entrances.
 #'
 #' @return Invisibly returns a list of results.
 run_fetch_apis <- function() {
@@ -225,20 +184,15 @@ run_fetch_apis <- function() {
   # 3. Subway entrances
   subway_path <- download_subway_entrances()
 
-  # 4. Sample trip data
-  trip_paths <- fetch_sample_trips()
-
   message("\n=== API Fetching Completed Successfully ===")
   message(sprintf("- Stations: %d records in data/raw/station_information.csv", nrow(stations)))
   message(sprintf("- Weather:  %d hourly rows in data/raw/weather_sept2024.csv", nrow(weather)))
   message(sprintf("- Subway:   %s", subway_path))
-  message(sprintf("- Trips:    %d CSV file(s) in data/raw/trips/", length(trip_paths)))
 
   invisible(list(
     stations = stations,
     weather  = weather,
-    subway   = subway_path,
-    trips    = trip_paths
+    subway   = subway_path
   ))
 }
 

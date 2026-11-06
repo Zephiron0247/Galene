@@ -1,0 +1,14 @@
+column_name,missing_count,missing_pct,total_rows
+ride_id,0,0,4997898
+rideable_type,0,0,4997898
+started_at,0,0,4997898
+ended_at,0,0,4997898
+start_station_name,4460,0.0892,4997898
+start_station_id,4460,0.0892,4997898
+end_station_name,13835,0.2768,4997898
+end_station_id,14439,0.2889,4997898
+start_lat,4460,0.0892,4997898
+start_lng,4460,0.0892,4997898
+end_lat,14420,0.2885,4997898
+end_lng,14420,0.2885,4997898
+member_casual,0,0,4997898

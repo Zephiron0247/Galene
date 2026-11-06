@@ -1,0 +1,9 @@
+step_number,step_description,rows_remaining,rows_dropped,pct_retained
+0,Raw Ingested Records,4997898,0,100
+1,Parse Timestamps (America/New_York),4997898,0,100
+2,Drop Missing Coordinates and Station IDs,4981399,16499,99.67
+3,Drop start >= end,4981399,0,99.67
+4,Drop Duration <= 0,4981399,0,99.67
+5,Tukey IQR Duration Filter,4708792,272607,94.22
+6,Compute Haversine Distance and Speed,4708792,0,94.22
+7,Drop Speed > 45 km/h,4708761,31,94.21

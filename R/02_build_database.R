@@ -67,7 +67,9 @@ read_trips_data <- function(trips_dir = "data/raw/trips",
   })
 
   # Step 3: Combine all trip data frames into a single tibble
-  combined_trips <- dplyr::as_tibble(dplyr::bind_rows(trips_list))
+  combined_trips <- dplyr::as_tibble(data.table::rbindlist(trips_list))
+  rm(trips_list)
+  invisible(gc(verbose = FALSE))
   message(sprintf("Successfully ingested %d total trip records.", nrow(combined_trips)))
 
   return(combined_trips)
