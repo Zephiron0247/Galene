@@ -29,7 +29,13 @@ REQUIRED_PACKAGES <- c(
   "ggridges",
   "plotly",
   "htmlwidgets",
-  "scales"
+  "scales",
+  "spdep",
+  "forecast",
+  "dbscan",
+  "cluster",
+  "MASS",
+  "boot"
 )
 
 # Packages that must NEVER be attached to search path via library()

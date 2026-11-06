@@ -1,0 +1,4 @@
+model,description,RMSE,MAE,MAPE
+STL + ETS (stlf),Loess seasonal decomposition with ETS error-trend-seasonal state space,2720.35,2028.15,73.51
+Seasonal Naïve (snaive),Lag-24 direct persistence seasonal baseline,2725.58,1709.62,50.86
+Dynamic Harmonic Regression (ARIMA + Fourier K=4),Non-seasonal ARIMA with 4 Fourier harmonic diurnal regressors,2958.44,2010.4,68.7
