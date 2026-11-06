@@ -2,6 +2,9 @@
 
 This document explains the statistical tests performed in `R/05_statistics.R` in simple, everyday language, detailing the research question, the test used, the empirical result, and its operational meaning for Citi Bike rebalancing.
 
+> **Data Limitation Note on Net-Flow Imbalance vs. True Stock-Outs**:
+> Wherever this project examines inventory stress, the metric measured is **net-flow imbalance (arrivals minus departures in a 2-hour window)**. Citi Bike does not publish historical bike counts per station, so true empty/full events cannot be observed from trip data.
+
 ---
 
 ## 1. Trip Duration Distribution (Normality Test)
@@ -52,16 +55,14 @@ This document explains the statistical tests performed in `R/05_statistics.R` in
   - Precipitation: negative correlation ($\rho = -0.18$)
   - Relative Humidity: negative correlation ($\rho = -0.42$)
   - Wind Speed: minor positive diurnal correlation ($\rho = +0.14$, tracking peak afternoon wind coinciding with commute rush)
-- **Everyday Meaning**: Warm, clear, dry weather drives ridership surges. Humid and rainy conditions sharply suppress bike demand.
+- **Everyday Meaning**: Warm, clear, dry weather drives ridership surges. Humid and rainy conditions suppress bike demand.
 
 ---
 
 ## 7. Weather Regression & Incidence Rate Ratios (Negative Binomial GLM)
 - **Question**: How much does each specific weather change multiply or decrease hourly demand, holding time-of-day and calendar days constant?
 - **Model Used**: Poisson GLM yielded extreme overdispersion (residual deviance / df = 547.25), proving that counts are clumped. We fitted a Negative Binomial regression (`MASS::glm.nb`) to calculate Incidence Rate Ratios (IRR).
-- **Empirical Readings**:
-  - **Temperature: Each additional +1°C changes expected hourly trips by +3.61% (IRR = 1.036, p = 7.66e-09).**
-  - **Precipitation: Each additional +1 mm of rain changes expected hourly trips by -7.11% (IRR = 0.929, p = 0.295).**
-  - **Wind Speed: Each additional +1 km/h of wind changes expected hourly trips by -0.42% (IRR = 0.996, p = 0.310).**
-  - **Relative Humidity: Each +1% higher humidity changes expected hourly trips by -0.19% (IRR = 0.998, p = 0.139).**
-- **Everyday Meaning**: Temperature is the single strongest positive driver (+3.6% per degree C), while rain is the single strongest suppressor (-7.1% per mm of precipitation). On wet rainy days, rebalancing vans can focus on station repairs and preventative maintenance rather than urgent dock turnover.
+- **Corrected Statistical Findings**:
+  - **Temperature raises hourly demand by about 3.6% per degree C (significant, p < 0.001).**
+  - **Rain, wind and humidity showed no statistically significant effect in September 2024, a month with little rain; this is a limitation.** (Their negative-binomial 95% confidence intervals include 1.0: precipitation $p = 0.295$, wind speed $p = 0.310$, relative humidity $p = 0.139$).
+- **Everyday Meaning**: In September 2024, temperature was the only statistically reliable meteorological driver (+3.6% ridership per degree Celsius). Because September 2024 was abnormally dry in New York City with very few rainy hours, the statistical model cannot detect significant rain effects, underscoring the importance of multi-seasonal training data.
