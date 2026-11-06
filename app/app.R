@@ -144,6 +144,7 @@ apply_plotly_theme <- function(p, is_dark = TRUE, title = "", x_title = "", y_ti
 ui <- bslib::page_navbar(
   id = "nav_tabs",
   title = "Citi Bike Fleet Optimization Core",
+  navbar_options = bslib::navbar_options(collapsible = FALSE),
   theme = bslib::bs_theme(
     version = 5,
     bg = "#0B1220",
@@ -152,9 +153,9 @@ ui <- bslib::page_navbar(
     secondary = "#94A3B8",
     success = "#3B82F6",
     danger = "#EF4444",
-    base_font = tryCatch(bslib::font_google("Inter", local = TRUE), error = function(e) "sans-serif"),
-    heading_font = tryCatch(bslib::font_google("Space Grotesk", local = TRUE), error = function(e) "sans-serif"),
-    code_font = tryCatch(bslib::font_google("JetBrains Mono", local = TRUE), error = function(e) "monospace"),
+    base_font = bslib::font_collection("Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"),
+    heading_font = bslib::font_collection("Space Grotesk", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"),
+    code_font = bslib::font_collection("JetBrains Mono", "Consolas", "Courier New", "monospace"),
     font_scale = 1.02
   ),
   
@@ -163,6 +164,15 @@ ui <- bslib::page_navbar(
     htmltools::tags$style(htmltools::HTML("
       :root {
         --bs-border-radius: 12px;
+      }
+      body, button, input, select, textarea, .navbar, .nav-link, .card, p, span, li, div, table, th, td {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+      }
+      h1, h2, h3, h4, h5, h6, .navbar-brand, .card-header {
+        font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+      }
+      code, pre, .font-monospace {
+        font-family: 'JetBrains Mono', Consolas, 'Courier New', monospace !important;
       }
       body {
         font-size: 16px;
@@ -181,6 +191,155 @@ ui <- bslib::page_navbar(
         --bs-border-color: #E2E8F0;
         --bs-secondary-color: #64748B;
       }
+      /* Ensure Navbar is permanently visible, never collapsed, and tabs stand out */
+      .navbar {
+        background-color: var(--bs-card-bg) !important;
+        border-bottom: 1px solid var(--bs-border-color) !important;
+        padding: 0.6rem 1.25rem !important;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 1030 !important;
+      }
+      .navbar .container-fluid {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        flex-wrap: nowrap !important;
+      }
+      .navbar-header {
+        display: flex !important;
+        align-items: center !important;
+      }
+      .navbar-toggle, .navbar-toggler {
+        display: none !important;
+      }
+      .navbar-collapse, .navbar-collapse.collapse, .navbar-collapse.collapsing {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        flex-grow: 1 !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+      }
+      .navbar-brand {
+        font-size: 1.15rem !important;
+        font-weight: 700 !important;
+        letter-spacing: -0.02em !important;
+        color: var(--bs-body-color) !important;
+        margin-right: 1.5rem !important;
+        white-space: nowrap !important;
+        text-decoration: none !important;
+      }
+      .navbar-nav {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 0.35rem !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        list-style: none !important;
+        flex-wrap: wrap !important;
+      }
+      .navbar-nav > li {
+        display: inline-flex !important;
+        align-items: center !important;
+      }
+      .navbar-nav > li > a,
+      .navbar-nav .nav-link {
+        display: inline-block !important;
+        padding: 0.45rem 0.85rem !important;
+        font-size: 0.92rem !important;
+        font-weight: 500 !important;
+        border-radius: 8px !important;
+        text-decoration: none !important;
+        transition: all 0.15s ease-in-out !important;
+        white-space: nowrap !important;
+        line-height: 1.4 !important;
+      }
+      /* Dark mode tab links */
+      [data-bs-theme='dark'] .navbar {
+        background-color: #121B2E !important;
+        border-bottom: 1px solid #1E2A44 !important;
+      }
+      [data-bs-theme='dark'] .navbar-brand {
+        color: #E6EDF7 !important;
+      }
+      [data-bs-theme='dark'] .navbar-nav > li > a,
+      [data-bs-theme='dark'] .navbar-nav .nav-link {
+        color: #CBD5E1 !important;
+        background-color: transparent !important;
+      }
+      [data-bs-theme='dark'] .navbar-nav > li > a:hover,
+      [data-bs-theme='dark'] .navbar-nav .nav-link:hover {
+        color: #38BDF8 !important;
+        background-color: rgba(56, 189, 248, 0.12) !important;
+      }
+      [data-bs-theme='dark'] .navbar-nav > li.active > a,
+      [data-bs-theme='dark'] .navbar-nav .nav-link.active {
+        color: #0B1220 !important;
+        background-color: #38BDF8 !important;
+        font-weight: 700 !important;
+      }
+      /* Light mode tab links */
+      [data-bs-theme='light'] .navbar {
+        background-color: #FFFFFF !important;
+        border-bottom: 1px solid #E2E8F0 !important;
+      }
+      [data-bs-theme='light'] .navbar-brand {
+        color: #0F172A !important;
+      }
+      [data-bs-theme='light'] .navbar-nav > li > a,
+      [data-bs-theme='light'] .navbar-nav .nav-link {
+        color: #334155 !important;
+        background-color: transparent !important;
+      }
+      [data-bs-theme='light'] .navbar-nav > li > a:hover,
+      [data-bs-theme='light'] .navbar-nav .nav-link:hover {
+        color: #0284C7 !important;
+        background-color: rgba(2, 132, 199, 0.1) !important;
+      }
+      [data-bs-theme='light'] .navbar-nav > li.active > a,
+      [data-bs-theme='light'] .navbar-nav .nav-link.active {
+        color: #FFFFFF !important;
+        background-color: #0284C7 !important;
+        font-weight: 700 !important;
+      }
+      /* Sub-tabs / Pills styling */
+      [data-bs-theme='dark'] .nav-pills .nav-link {
+        color: #CBD5E1 !important;
+        background-color: rgba(30, 42, 68, 0.6) !important;
+        border: 1px solid #1E2A44 !important;
+        margin-right: 6px !important;
+        border-radius: 8px !important;
+      }
+      [data-bs-theme='dark'] .nav-pills .nav-link:hover {
+        color: #38BDF8 !important;
+        border-color: #38BDF8 !important;
+      }
+      [data-bs-theme='dark'] .nav-pills .nav-link.active {
+        color: #0B1220 !important;
+        background-color: #38BDF8 !important;
+        border-color: #38BDF8 !important;
+        font-weight: 700 !important;
+      }
+      [data-bs-theme='light'] .nav-pills .nav-link {
+        color: #475569 !important;
+        background-color: #F1F5F9 !important;
+        border: 1px solid #CBD5E1 !important;
+        margin-right: 6px !important;
+        border-radius: 8px !important;
+      }
+      [data-bs-theme='light'] .nav-pills .nav-link:hover {
+        color: #0284C7 !important;
+        border-color: #0284C7 !important;
+      }
+      [data-bs-theme='light'] .nav-pills .nav-link.active {
+        color: #FFFFFF !important;
+        background-color: #0284C7 !important;
+        border-color: #0284C7 !important;
+        font-weight: 700 !important;
+      }
+      /* Cards & typography */
       .card {
         border-radius: 12px !important;
         border: 1px solid var(--bs-border-color) !important;
@@ -229,6 +388,52 @@ ui <- bslib::page_navbar(
         color: var(--bs-secondary-color);
         margin-top: 2px;
         margin-bottom: 8px;
+      }
+      /* Value boxes */
+      .bslib-value-box {
+        border-radius: 12px !important;
+        border: 1px solid var(--bs-border-color) !important;
+      }
+      [data-bs-theme='dark'] .bslib-value-box {
+        background-color: #121B2E !important;
+        color: #E6EDF7 !important;
+      }
+      /* DataTables dark theme styling */
+      [data-bs-theme='dark'] table.dataTable {
+        color: #E6EDF7 !important;
+      }
+      [data-bs-theme='dark'] table.dataTable th {
+        background-color: #162036 !important;
+        color: #F1F5F9 !important;
+        border-bottom: 1px solid #1E2A44 !important;
+      }
+      [data-bs-theme='dark'] table.dataTable td {
+        background-color: #121B2E !important;
+        color: #CBD5E1 !important;
+        border-top: 1px solid #1E2A44 !important;
+      }
+      [data-bs-theme='dark'] .dataTables_info,
+      [data-bs-theme='dark'] .dataTables_paginate,
+      [data-bs-theme='dark'] .dataTables_length,
+      [data-bs-theme='dark'] .dataTables_filter {
+        color: #94A3B8 !important;
+      }
+      [data-bs-theme='dark'] .page-link {
+        background-color: #121B2E !important;
+        border-color: #1E2A44 !important;
+        color: #CBD5E1 !important;
+      }
+      /* Form inputs & selects */
+      [data-bs-theme='dark'] .form-control,
+      [data-bs-theme='dark'] .form-select {
+        background-color: #162036 !important;
+        border-color: #1E2A44 !important;
+        color: #E6EDF7 !important;
+      }
+      [data-bs-theme='dark'] .form-label,
+      [data-bs-theme='dark'] .control-label {
+        color: #CBD5E1 !important;
+        font-weight: 500 !important;
       }
     "))
   ),
